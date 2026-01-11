@@ -1,8 +1,14 @@
 package main;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import main.Commands.Command;
+import main.Commands.CommandFactory;
+import main.Database.Database;
+import main.Users.User;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +48,29 @@ public class App {
             jackson library, available here: https://www.baeldung.com/jackson-annotations
         */
 
-        // TODO 2: process commands.
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            File databaseUsers = new File(INPUT_USERS_FIELD);
+            // avoid type erasure
+            List<User> users = mapper.readValue(databaseUsers, new TypeReference<List<User>>() {});
+            Database.getInstance().setUsers(users);
+            JsonNode[] commands = mapper.readValue(new File(inputPath), JsonNode[].class);
+
+            for (JsonNode command : commands) {
+                String commandName = command.get("name").asText();
+                String username = command.get("username").asText();
+
+                // we use the Command Design Pattern combined with a Factory Design Pattern here for code clarity
+                Command delegatedCommand = CommandFactory.create(commandName, username, command, outputs);
+
+                if (delegatedCommand != null) {
+                    delegatedCommand.execute();
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file");
+        }
+
 
         // TODO 3: create objectnodes for output, add them to outputs list.
 
