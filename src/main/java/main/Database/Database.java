@@ -59,5 +59,17 @@ public class Database {
     public void addTicket(Ticket ticket) {
         this.tickets.add(ticket);
     }
+    public void addMilestone(Milestone milestone) {
+        this.milestones.add(milestone);
+    }
+
+    public static void reset() {
+        if (singleton != null) {
+            singleton.users.clear();
+            singleton.milestones.clear();
+            singleton.tickets.clear();
+            singleton = null; // Resetăm complet instanța pentru siguranță
+        }
+    }
 
 }

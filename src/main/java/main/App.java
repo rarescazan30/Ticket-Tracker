@@ -9,6 +9,8 @@ import main.Commands.Command;
 import main.Commands.CommandFactory;
 import main.Database.Database;
 import main.Exceptions.StopExecutionException;
+import main.PeriodLogic.InteractionManager;
+import main.PeriodLogic.TimeManager;
 import main.Users.User;
 
 import java.io.File;
@@ -39,6 +41,10 @@ public class App {
     public static void run(final String inputPath, final String outputPath) {
         // feel free to change this if needed
         // however keep 'outputs' variable name to be used for writing
+        Database.reset();
+        TimeManager.reset();
+        InteractionManager.reset();
+        TimeManager.getInstance().addObserver(InteractionManager.getInstance());
         List<ObjectNode> outputs = new ArrayList<>();
 
         /*

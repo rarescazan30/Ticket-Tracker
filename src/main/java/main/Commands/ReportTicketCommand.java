@@ -23,7 +23,7 @@ public class ReportTicketCommand extends BaseCommand {
 
     @Override
     protected void executeLogic() {
-        if (Period.getInstance().isTestingPeriod(this.timestamp)) {
+        if (!Period.getInstance().isTestingPeriod(this.timestamp)) {
             throw new InvalidPeriodException("Tickets can only be reported during testing phases.");
         }
         int nextId = database.getNewTicketId();

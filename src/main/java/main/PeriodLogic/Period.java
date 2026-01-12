@@ -9,7 +9,7 @@ import java.time.temporal.ChronoUnit;
 public class Period {
     private static Period singleton;
 
-    private LocalDate lastTestingStartDate;
+    private LocalDate lastTestingStartDate = null;
     public Period() {
         // we don't want to ever use it
     }
@@ -28,7 +28,7 @@ public class Period {
     public boolean isTestingPeriod (LocalDate currentDate) {
         if (lastTestingStartDate == null) {
             startTestingPeriod(currentDate);
-            return true; //first command won't be a startTesting but it works like one.
+            return true; //first command won't be a startTesting, but it works like one.
         }
         int daysBetween = (int) ChronoUnit.DAYS.between(lastTestingStartDate, currentDate) + 1;
         return daysBetween <= 12;

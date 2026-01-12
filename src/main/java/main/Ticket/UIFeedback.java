@@ -11,8 +11,8 @@ public class UIFeedback extends Ticket {
     private String screenshotUrl;
     private String suggestedFix;
 
-    public UIFeedback(int id, String username, JsonNode ticketDetails) {
-        super(id, username, ticketDetails);
+    public UIFeedback(int id, String username, JsonNode ticketDetails, String timestamp) {
+        super(id, username, ticketDetails, timestamp);
         if (ticketDetails.has("uiElementId")) {
             this.uiElementId = ticketDetails.get("uiElementId").asText();
         }

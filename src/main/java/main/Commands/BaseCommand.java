@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import main.Database.Database;
 import main.Enums.RoleType;
-import main.Exceptions.InvalidPeriodException;
-import main.Exceptions.InvalidRoleException;
+import main.Exceptions.*;
+import main.PeriodLogic.TimeManager;
 import main.Users.User;
 
 import java.time.LocalDate;
@@ -25,7 +25,7 @@ public abstract class BaseCommand implements Command {
         this.outputs = outputs;
         this.command = command;
         this.username = command.get("username").asText();
-        this.commandName = command.get("commandName").asText();
+        this.commandName = command.get("command").asText();
         this.timestamp = LocalDate.parse(command.get("timestamp").asText());
     }
 
@@ -64,6 +64,7 @@ public abstract class BaseCommand implements Command {
     * */
     @Override
     public final void execute() {
+        TimeManager.getInstance().sync(this.timestamp);
         if (username != null && database.getUser(username) == null) {
             writeError("The user " + username + " does not exist.");
             return;
@@ -74,7 +75,9 @@ public abstract class BaseCommand implements Command {
                 checkRole(user);
             }
             executeLogic();
-        } catch (InvalidRoleException | InvalidPeriodException e) {
+        } catch (InvalidRoleException | InvalidPeriodException | NonBugAnonymous |
+                 BlockedMilestoneException | InvalidExpertiseException | InvalidMilestoneAccessException | InvalidSeniorityException |
+                 InvalidStatusException | TicketAlreadyAssignedException e) {
             writeError(e.getMessage());
         }
 

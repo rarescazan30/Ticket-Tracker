@@ -1,5 +1,8 @@
 package main.Ticket;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JsonNode;
 import jdk.jshell.Snippet;
 import main.Comments.Comment;
@@ -13,8 +16,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /*
-word
 * */
+// we tell Jackson how we want the output
+@JsonPropertyOrder({
+        "id", "type", "title",
+        "businessPriority", "status",
+        "createdAt", "assignedAt", "solvedAt",
+        "assignedTo", "reportedBy", "comments"
+})
 public abstract class Ticket {
     private String username;
     private int id;
@@ -31,7 +40,7 @@ public abstract class Ticket {
     private LocalDate assignedAt;
     private List<Comment> comments;
 
-    public Ticket (int id, String username, JsonNode ticketDetails) {
+    public Ticket (int id, String username, JsonNode ticketDetails, String timestamp) {
         this.username = username;
         this.id = id;
         this.type = ticketDetails.get("type").asText();
@@ -39,20 +48,21 @@ public abstract class Ticket {
         this.businessPriority = BusinessPriorityType.valueOf(ticketDetails.get("businessPriority").asText());
         this.status = StatusType.OPEN;
         this.expertiseArea = ExpertiseType.valueOf(ticketDetails.get("expertiseArea").asText());
-        this.description = ticketDetails.get("description").asText();
-        if  (!ticketDetails.get("reportedBy").asText().isEmpty()) {
-            this.reportedBy = ticketDetails.get("reportedBy").asText();
+        if (ticketDetails.has("description")) {
+            this.description = ticketDetails.get("description").asText();
+        }
+        String reported = ticketDetails.get("reportedBy").asText();
+        if  (!reported.isEmpty()) {
+            this.reportedBy = reported;
         } else {
             if (this.type.equals("BUG")) {
                 this.reportedBy = "ANONIM";
                 this.businessPriority = BusinessPriorityType.LOW;
-            } else throw new NonBugAnonymous("ERROR - Ticket is not BUG!");
+            } else throw new NonBugAnonymous("Anonymous reports are only allowed for tickets of type BUG.");
         }
-        this.createdAt = LocalDate.parse(ticketDetails.get("timestamp").asText());
+        this.createdAt = LocalDate.parse(timestamp);
         this.comments = new ArrayList<>();
-        this.solvedAt = null;
-        this.assignedAt = null;
-        this.assignedTo = null;
+
     }
 
     public int getId() { return id; }
@@ -60,16 +70,71 @@ public abstract class Ticket {
     public String getTitle() { return title; }
     public BusinessPriorityType getBusinessPriority() { return businessPriority; }
     public StatusType getStatus() { return status; }
+    @JsonIgnore
     public ExpertiseType getExpertiseArea() { return expertiseArea; }
+    @JsonIgnore
     public String getDescription() { return description; }
-    public String getReportedBy() { return reportedBy; }
-
-    public LocalDate getCreatedAt() { return createdAt; }
-    public LocalDate getAssignedAt() { return assignedAt; }
-    public String getAssignedTo() { return assignedTo; }
-    public List<Comment> getComments() { return comments; }
     public Object getSolvedAt() {
         if (solvedAt == null) return "";
-        return solvedAt;
+        return solvedAt.toString();
+    }
+    public Object getAssignedAt() {
+        if (assignedAt == null) return "";
+        return assignedAt.toString();
+    }
+    public String getAssignedTo() {
+        if (assignedTo == null) return "";
+        return assignedTo;
+    }
+    public String getReportedBy() {
+        if (reportedBy == null || "ANONIM".equals(reportedBy)) return "";
+        return reportedBy;
+    }
+
+    // workaround because Jackson doesn't work well with LocalDate
+    @JsonIgnore
+    public LocalDate getCreatedAt() {
+        return createdAt;
+    }
+    @JsonProperty("createdAt")
+    public String getCreatedAtAsString() {
+        return createdAt.toString();
+    }
+    public List<Comment> getComments() { return comments; }
+
+    public void upgradePriority() {
+        if (this.status == StatusType.CLOSED || this.status == StatusType.RESOLVED) {
+            return;
+        }
+
+        switch (this.businessPriority) {
+            case LOW:
+                this.businessPriority = BusinessPriorityType.MEDIUM;
+                break;
+            case MEDIUM:
+                this.businessPriority = BusinessPriorityType.HIGH;
+                break;
+            case HIGH:
+                this.businessPriority = BusinessPriorityType.CRITICAL;
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    public void setBusinessPriority(BusinessPriorityType businessPriorityType) {
+        this.businessPriority = businessPriorityType;
+    }
+    public void setAssignedTo(String assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
+    public void setAssignedAt(LocalDate assignedAt) {
+        this.assignedAt = assignedAt;
+    }
+
+    public void setStatus(StatusType status) {
+        this.status = status;
     }
 }

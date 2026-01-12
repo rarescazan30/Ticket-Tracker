@@ -8,8 +8,8 @@ public class FeatureRequest extends Ticket {
     private BusinessValueType businessValue;
     private CustomerDemandType customerDemand;
 
-    public FeatureRequest(int id, String username, JsonNode ticketDetails) {
-        super(id, username, ticketDetails);
+    public FeatureRequest(int id, String username, JsonNode ticketDetails, String timestamp) {
+        super(id, username, ticketDetails, timestamp);
         this.businessValue = BusinessValueType.valueOf(ticketDetails.get("businessValue").asText());
         this.customerDemand = CustomerDemandType.valueOf(ticketDetails.get("customerDemand").asText());
     }

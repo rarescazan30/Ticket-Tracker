@@ -1,11 +1,31 @@
 package main.Users;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import main.Enums.RoleType;
 
-public class User {
+// configuration for easier input reading with JSON
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.EXISTING_PROPERTY, // the role exists specifically in my data
+        property = "role", // this decides how we handle object
+        visible = true // we want to keep the role too
+)
+// map role to specific subclasses
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = Manager.class, name = "MANAGER"),
+        @JsonSubTypes.Type(value = Developer.class, name = "DEVELOPER"),
+        @JsonSubTypes.Type(value = Reporter.class, name = "REPORTER")
+})
+
+public abstract class User {
     private String username;
     private String email;
     private RoleType role;
+
+    public User(){
+        // empty constructor for Jackson
+    }
 
     public User(String username, String email, RoleType role) {
         this.username = username;

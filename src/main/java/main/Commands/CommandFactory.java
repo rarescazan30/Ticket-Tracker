@@ -13,10 +13,10 @@ public class CommandFactory {
                 return new ReportTicketCommand(outputs, command);
             case "viewTickets":
                 return new ViewTicketsCommand(outputs, command);
-            case "addComment":
-                return new AddCommentCommand(outputs, command);
-            case "undoAddComment":
-                return new UndoAddCommentCommand(outputs, command);
+//            case "addComment":
+//                return new AddCommentCommand(outputs, command);
+//            case "undoAddComment":
+//                return new UndoAddCommentCommand(outputs, command);
             case "createMilestone":
                 return new CreateMilestoneCommand(outputs, command);
             case "viewMilestones":
@@ -26,15 +26,15 @@ public class CommandFactory {
             case "undoAssignTicket":
                 return new UndoAssignTicketCommand(outputs, command);
             case "viewAssignedTickets":
-                return new AssignedTicketsCommand(outputs, command);
-            case "viewTicketHistory":
-                return new ViewTicketHistoryCommand(outputs, command);
-            case "viewNotifications":
-                return new ViewNotificationsCommand(outputs, command);
-            case "search":
-                return new SearchCommand(outputs, command);
-            case "generatePerformanceReport":
-                return new GeneratePerformanceReportCommand(outputs, command);
+                return new ViewAssignedTicketsCommand(outputs, command);
+//            case "viewTicketHistory":
+//                return new ViewTicketHistoryCommand(outputs, command);
+//            case "viewNotifications":
+//                return new ViewNotificationsCommand(outputs, command);
+//            case "search":
+//                return new SearchCommand(outputs, command);
+//            case "generatePerformanceReport":
+//                return new GeneratePerformanceReportCommand(outputs, command);
             case "lostInvestors":
                 return new LostInvestorsCommand(outputs, command);
             case "startTestingPhase":
