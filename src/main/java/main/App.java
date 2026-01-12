@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import main.Commands.Command;
 import main.Commands.CommandFactory;
 import main.Database.Database;
+import main.Exceptions.StopExecutionException;
 import main.Users.User;
 
 import java.io.File;
@@ -57,14 +58,15 @@ public class App {
             JsonNode[] commands = mapper.readValue(new File(inputPath), JsonNode[].class);
 
             for (JsonNode command : commands) {
-                String commandName = command.get("name").asText();
-                String username = command.get("username").asText();
-
                 // we use the Command Design Pattern combined with a Factory Design Pattern here for code clarity
-                Command delegatedCommand = CommandFactory.create(commandName, username, command, outputs);
+                Command delegatedCommand = CommandFactory.create(outputs, command);
 
                 if (delegatedCommand != null) {
-                    delegatedCommand.execute();
+                    try {
+                        delegatedCommand.execute();
+                    } catch (StopExecutionException e) {
+                        break;
+                    }
                 }
             }
         } catch (IOException e) {

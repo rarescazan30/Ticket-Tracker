@@ -53,4 +53,11 @@ public class Database {
         return null;
     }
 
+    public int getNewTicketId() {
+        return this.tickets.size();
+    }
+    public void addTicket(Ticket ticket) {
+        this.tickets.add(ticket);
+    }
+
 }
