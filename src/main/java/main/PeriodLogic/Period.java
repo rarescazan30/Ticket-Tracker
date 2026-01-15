@@ -19,6 +19,9 @@ public class Period {
         }
         return singleton;
     }
+    public void reset() {
+        this.lastTestingStartDate = null;
+    }
     public void startTestingPeriod(LocalDate timestamp) {
         this.lastTestingStartDate = timestamp;
     }

@@ -30,6 +30,11 @@ public class OutputBuilder {
         this.node.set(key, mapper.valueToTree(objectToSerialize));
         return this;
     }
+    public OutputBuilder put(String key, String value) {
+        this.node.put(key, value);
+        return this;
+    }
+
 
     public ObjectNode build() {
         return this.node;

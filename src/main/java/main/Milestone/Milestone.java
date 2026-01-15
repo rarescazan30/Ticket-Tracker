@@ -67,9 +67,11 @@ public class Milestone {
         List<Ticket> allTickets = Database.getInstance().getTickets();
         
         for (int number : tickets) {
-            Ticket ticket = allTickets.get(number);
-            if (ticket.getStatus() != StatusType.CLOSED) {
-                openTickets.add(number);
+            if (Database.getInstance().getTickets().size() > number) {
+                Ticket ticket = allTickets.get(number);
+                if (ticket.getStatus() != StatusType.CLOSED) {
+                    openTickets.add(number);
+                }
             }
         }
         return openTickets;
@@ -88,8 +90,8 @@ public class Milestone {
     public double getCompletionPercentage() {
         if (tickets.isEmpty()) return 0.00;
         int nrOfClosed = getClosedTickets().size();
-        double percentage = (double) nrOfClosed / (double) tickets.size() * 100.0;
-        return Math.round(percentage * 100.0) / 100.0;
+        double percentage = (double) nrOfClosed / (double) tickets.size();
+        return (Math.round(percentage * 100.0) / 100.0);
     }
 
     public String getStatus() {
@@ -118,8 +120,26 @@ public class Milestone {
     }
 
     public int getOverdueBy() {
+        LocalDate endDate = requestedDate;
+        if (getStatus().equals("COMPLETED")) {
+            LocalDate maxSolvedAt = null;
+            List<Ticket> allTickets = Database.getInstance().getTickets();
+            for (int ticketId : tickets) {
+                Ticket ticket = allTickets.get(ticketId);
+                if (ticket.getSolvedAt() != null && !ticket.getSolvedAt().toString().isEmpty()) {
+                    LocalDate lastSolvedDate = LocalDate.parse(ticket.getSolvedAt().toString());
+                    if (maxSolvedAt == null || lastSolvedDate.isAfter(maxSolvedAt)) {
+                        maxSolvedAt = lastSolvedDate;
+                    }
+                }
+
+            }
+            if (maxSolvedAt != null) {
+                endDate = maxSolvedAt;
+            }
+        }
         int result;
-        result = ((int) ChronoUnit.DAYS.between(dueDate, requestedDate) + 1);
+        result = ((int) ChronoUnit.DAYS.between(dueDate, endDate) + 1);
         if (result < 0) {
             result = 0;
         }

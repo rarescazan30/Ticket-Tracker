@@ -6,6 +6,7 @@ import main.Database.Database;
 import main.Enums.RoleType;
 import main.Enums.StatusType;
 import main.Ticket.Ticket;
+import main.Ticket.TicketAction;
 
 import java.util.List;
 
@@ -26,5 +27,6 @@ public class UndoAssignTicketCommand extends BaseCommand {
         ticket.setAssignedTo(null);
         ticket.setStatus(StatusType.OPEN);
         ticket.setAssignedAt(null);
+        ticket.addAction(new TicketAction("DE-ASSIGNED", this.username, this.timestamp));
     }
 }

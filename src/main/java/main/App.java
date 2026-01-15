@@ -10,6 +10,7 @@ import main.Commands.CommandFactory;
 import main.Database.Database;
 import main.Exceptions.StopExecutionException;
 import main.PeriodLogic.InteractionManager;
+import main.PeriodLogic.Period;
 import main.PeriodLogic.TimeManager;
 import main.Users.User;
 
@@ -44,6 +45,7 @@ public class App {
         Database.reset();
         TimeManager.reset();
         InteractionManager.reset();
+        Period.getInstance().reset();
         TimeManager.getInstance().addObserver(InteractionManager.getInstance());
         List<ObjectNode> outputs = new ArrayList<>();
 

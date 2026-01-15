@@ -2,12 +2,14 @@ package main.Commands;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import main.Database.Database;
 import main.Enums.RoleType;
 import main.Exceptions.InvalidPeriodException;
 import main.Exceptions.TicketAlreadyAssignedException;
 import main.Milestone.Milestone;
 import main.PeriodLogic.Period;
 import main.Ticket.Ticket;
+import main.Ticket.TicketAction;
 import main.Ticket.TicketFactory;
 
 import java.util.ArrayList;
@@ -40,5 +42,10 @@ public class CreateMilestoneCommand extends BaseCommand {
         }
         Milestone newMilestone = new Milestone(command);
         database.addMilestone(newMilestone);
+        String milestoneName = command.get("name").asText();
+        for (int ticketId : tickets) {
+            Ticket t = Database.getInstance().getTickets().get(ticketId);
+            t.addAction(new TicketAction("ADDED_TO_MILESTONE", milestoneName, this.username, this.timestamp, true));
+        }
     }
 }

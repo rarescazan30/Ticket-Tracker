@@ -8,6 +8,7 @@ import jdk.jshell.Snippet;
 import main.Comments.Comment;
 import main.Enums.BusinessPriorityType;
 import main.Enums.ExpertiseType;
+import main.Enums.SeniorityType;
 import main.Enums.StatusType;
 import main.Exceptions.NonBugAnonymous;
 
@@ -39,6 +40,7 @@ public abstract class Ticket {
     private String assignedTo;
     private LocalDate assignedAt;
     private List<Comment> comments;
+    private List<TicketAction> actions = new ArrayList<>();
 
     public Ticket (int id, String username, JsonNode ticketDetails, String timestamp) {
         this.username = username;
@@ -136,5 +138,29 @@ public abstract class Ticket {
 
     public void setStatus(StatusType status) {
         this.status = status;
+    }
+    public void setSolvedAt(LocalDate solvedAt) {
+        this.solvedAt = solvedAt;
+    }
+
+    @JsonIgnore
+    public List<TicketAction> getActions() { return actions; }
+
+    public void addAction(TicketAction ticketAction) {
+        this.actions.add(ticketAction);
+    }
+
+    @JsonIgnore
+    public SeniorityType getRequiredSeniority() {
+        switch (this.businessPriority) {
+            case MEDIUM:
+            case HIGH:
+                return SeniorityType.MID;
+            case CRITICAL:
+                return SeniorityType.SENIOR;
+            case LOW:
+            default:
+                return SeniorityType.JUNIOR;
+        }
     }
 }

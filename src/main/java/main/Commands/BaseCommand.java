@@ -3,6 +3,7 @@ package main.Commands;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import main.Comments.Comment;
 import main.Database.Database;
 import main.Enums.RoleType;
 import main.Exceptions.*;
@@ -77,7 +78,8 @@ public abstract class BaseCommand implements Command {
             executeLogic();
         } catch (InvalidRoleException | InvalidPeriodException | NonBugAnonymous |
                  BlockedMilestoneException | InvalidExpertiseException | InvalidMilestoneAccessException | InvalidSeniorityException |
-                 InvalidStatusException | TicketAlreadyAssignedException e) {
+                 InvalidStatusException | TicketAlreadyAssignedException | ClosedTickeException | CommentLengthException | CommentOnAnonymousTicket
+                 | InvalidTicketAssignmentException | InvalidReporterException e) {
             writeError(e.getMessage());
         }
 
