@@ -6,6 +6,8 @@ import main.Database.Database;
 import main.Enums.RoleType;
 import main.Enums.StatusType;
 import main.Exceptions.InvalidTicketAssignmentException;
+import main.Milestone.Milestone;
+import main.Notifications.NotificationService;
 import main.Ticket.Ticket;
 import main.Ticket.TicketAction;
 import main.Users.Developer;
@@ -39,13 +41,23 @@ public class ChangeStatusCommand extends BaseCommand {
             // IN_PROGRESS -> RESOLVED -> CLOSED
             if (currentStatus == StatusType.IN_PROGRESS) {
                 newStatus = StatusType.RESOLVED;
+                ticket.setSolvedAt(this.timestamp);
             } else if (currentStatus == StatusType.RESOLVED) {
                 newStatus = StatusType.CLOSED;
-                ticket.setSolvedAt(this.timestamp);
+                // if i move ticket.setSolvedAt(this.timestamp); here and comment it in first if, this test passes but others fail!
+
             }
             if (newStatus != null) {
                 ticket.setStatus(newStatus);
                 ticket.addAction(new TicketAction("STATUS_CHANGED", currentStatus.toString(), newStatus.toString(), this.username, this.timestamp));
+                if (newStatus == StatusType.CLOSED) {
+                    for (Milestone m : Database.getInstance().getMilestones()) {
+                        if (m.getTickets().contains(ticket.getId())) {
+                            m.resolvePostCompletionActions(ticket, this.timestamp.toString());
+                            break;
+                        }
+                    }
+                }
             }
         }
     }

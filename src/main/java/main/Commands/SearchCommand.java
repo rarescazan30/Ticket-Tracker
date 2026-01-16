@@ -97,22 +97,25 @@ public class SearchCommand extends BaseCommand {
                 tNode.put("createdAt", t.getCreatedAt().toString());
                 tNode.put("solvedAt", t.getSolvedAt() != null ? t.getSolvedAt().toString() : "");
                 tNode.put("reportedBy", t.getReportedBy());
-
+                List<String> foundWords = new ArrayList<>();
                 if (filters.has("keywords")) {
                     ArrayNode matchingWords = tNode.putArray("matchingWords");
                     String content = (t.getTitle() + " " + t.getDescription()).toLowerCase();
-                    List<String> foundWords = new ArrayList<>();
                     for (JsonNode k : filters.get("keywords")) {
                         String key = k.asText().toLowerCase();
                         if (content.contains(key)) foundWords.add(key);
                     }
                     Collections.sort(foundWords);
+
+                }
+                if (filters.has("keywords") || user.getRole() == RoleType.MANAGER) {
+                    ArrayNode matchingWords = tNode.putArray("matchingWords");
                     foundWords.forEach(matchingWords::add);
                 }
                 resultsJsonObjects.add(tNode);
             }
 
-        } else if ("DEVELOPER".equals(searchType)) {
+        } else if (searchType.equals("DEVELOPER")) {
             List<User> results = new ArrayList<>();
             Manager manager = (Manager) user;
             for (User candidate : Database.getInstance().getUsers()) {

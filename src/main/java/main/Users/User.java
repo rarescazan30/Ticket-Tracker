@@ -3,6 +3,7 @@ package main.Users;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import main.Enums.RoleType;
+import main.Visitor.UserVisitor;
 
 // configuration for easier input reading with JSON
 @JsonTypeInfo(
@@ -45,4 +46,5 @@ public abstract class User {
     public RoleType getRole() {
         return role;
     }
+    public abstract double accept(UserVisitor visitor);
 }

@@ -1,8 +1,10 @@
 package main.Ticket;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import main.Enums.BusinessValueType;
 import main.Enums.CustomerDemandType;
+import main.Visitor.TicketVisitor;
 
 public class UIFeedback extends Ticket {
     private String uiElementId;
@@ -24,5 +26,17 @@ public class UIFeedback extends Ticket {
         if (ticketDetails.has("suggestedFix")) {
             this.suggestedFix = ticketDetails.get("suggestedFix").asText();
         }
+    }
+    @Override
+    public double accept(TicketVisitor visitor) {
+        return visitor.visit(this);
+    }
+    @JsonIgnore
+    public int getUsabilityScore() {
+        return usabilityScore;
+    }
+    @JsonIgnore
+    public BusinessValueType getBusinessValue() {
+        return businessValue;
     }
 }

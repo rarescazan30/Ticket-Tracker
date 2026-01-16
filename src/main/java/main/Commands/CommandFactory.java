@@ -33,12 +33,21 @@ public class CommandFactory {
                 return new UndoChangeStatusCommand(outputs,command);
             case "viewTicketHistory":
                 return new ViewTicketHistoryCommand(outputs, command);
-//            case "viewNotifications":
-//                return new ViewNotificationsCommand(outputs, command);
+            case "viewNotifications":
+                return new ViewNotificationsCommand(outputs, command);
             case "search":
                 return new SearchCommand(outputs, command);
-//            case "generatePerformanceReport":
-//                return new GeneratePerformanceReportCommand(outputs, command);
+            case "generatePerformanceReport":
+                return new GeneratePerformanceReportCommand(outputs, command);
+            case "generateTicketRiskReport":
+                return new GenerateTicketRiskReportCommand(outputs, command);
+            case "generateResolutionEfficiencyReport":
+                return new GenerateResolutionEfficiencyReportCommand(outputs, command);
+            case "generateCustomerImpactReport":
+                return new GenerateCustomerImpactReportCommand(outputs, command);
+            case "appStabilityReport":
+                return new AppStabilityReportCommand(outputs, command);
+
             case "lostInvestors":
                 return new LostInvestorsCommand(outputs, command);
             case "startTestingPhase":

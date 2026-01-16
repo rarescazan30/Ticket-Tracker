@@ -4,6 +4,7 @@ import main.Database.Database;
 import main.Enums.BusinessPriorityType;
 import main.Enums.StatusType;
 import main.Milestone.Milestone;
+import main.Notifications.NotificationService;
 import main.Ticket.Ticket;
 
 import java.time.LocalDate;
@@ -67,7 +68,7 @@ public class InteractionManager implements TimeObserver {
                 ticket.setBusinessPriority(BusinessPriorityType.CRITICAL);
             }
         }
-        // TODO Notify
+        NotificationService.notifyMilestoneDueTomorrow(milestone);
     }
 
 }

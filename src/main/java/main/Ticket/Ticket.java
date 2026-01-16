@@ -11,6 +11,7 @@ import main.Enums.ExpertiseType;
 import main.Enums.SeniorityType;
 import main.Enums.StatusType;
 import main.Exceptions.NonBugAnonymous;
+import main.Visitor.TicketVisitor;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -105,7 +106,7 @@ public abstract class Ticket {
     public List<Comment> getComments() { return comments; }
 
     public void upgradePriority() {
-        if (this.status == StatusType.CLOSED || this.status == StatusType.RESOLVED) {
+        if (this.status == StatusType.CLOSED) {
             return;
         }
 
@@ -163,4 +164,5 @@ public abstract class Ticket {
                 return SeniorityType.JUNIOR;
         }
     }
+    public abstract double accept(TicketVisitor visitor);
 }

@@ -2,6 +2,7 @@ package main.Users;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import main.Enums.RoleType;
+import main.Visitor.UserVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,13 @@ public class Manager extends User {
     public Manager() {
         super();
         this.subordinates = new ArrayList<>();
+    }
+
+
+    // managers dont need performance reports
+    @Override
+    public double accept(UserVisitor visitor) {
+        return 0;
     }
 
     public String getHireDate() { return hireDate; }

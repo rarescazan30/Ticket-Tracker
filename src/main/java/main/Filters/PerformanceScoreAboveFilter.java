@@ -13,9 +13,7 @@ public class PerformanceScoreAboveFilter implements Filter<User> {
             Developer devTarget = (Developer) entity;
             double threshold = filters.get("performanceScoreAbove").asDouble();
 
-            // return devTarget.getPerformanceScore() > threshold;\
-            // TODO: implement devTarget.getPerformanceScore
-            return false;
+            return devTarget.getPerformanceScore() >= threshold;
         }
         return true;
     }

@@ -7,6 +7,7 @@ import main.Enums.RoleType;
 import main.Exceptions.InvalidPeriodException;
 import main.Exceptions.TicketAlreadyAssignedException;
 import main.Milestone.Milestone;
+import main.Notifications.NotificationService;
 import main.PeriodLogic.Period;
 import main.Ticket.Ticket;
 import main.Ticket.TicketAction;
@@ -42,6 +43,7 @@ public class CreateMilestoneCommand extends BaseCommand {
         }
         Milestone newMilestone = new Milestone(command);
         database.addMilestone(newMilestone);
+        NotificationService.notifyMilestoneCreated(newMilestone);
         String milestoneName = command.get("name").asText();
         for (int ticketId : tickets) {
             Ticket t = Database.getInstance().getTickets().get(ticketId);

@@ -1,8 +1,11 @@
 package main.Ticket;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
+import main.Enums.BusinessValueType;
 import main.Enums.FrequencyType;
 import main.Enums.SeverityType;
+import main.Visitor.TicketVisitor;
 
 public class Bug extends Ticket {
     private String expectedBehavior;
@@ -23,5 +26,17 @@ public class Bug extends Ticket {
         if (ticketDetails.get("errorCode") != null) {
             this.errorCode = ticketDetails.get("errorCode").asInt();
         }
+    }
+    @Override
+    public double accept(TicketVisitor visitor) {
+        return visitor.visit(this);
+    }
+    @JsonIgnore
+    public FrequencyType getFrequency() {
+        return this.frequency;
+    }
+    @JsonIgnore
+    public SeverityType getSeverity() {
+        return this.severity;
     }
 }
