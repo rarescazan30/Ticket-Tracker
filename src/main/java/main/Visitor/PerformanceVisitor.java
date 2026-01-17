@@ -1,19 +1,35 @@
 package main.Visitor;
 
 import main.Users.Developer;
-import main.Users.Manager;
-import main.Users.User;
-import main.Visitor.PerformanceData;
-import main.Visitor.UserVisitor;
 
-public class PerformanceVisitor implements UserVisitor {
-    public final PerformanceData performanceData;
-    public PerformanceVisitor(PerformanceData performanceData) {
-        this.performanceData = performanceData; // we use the intermediary class to make code cleaner
+/**
+ * Implementation of the Visitor pattern that calculates performance scores for users
+ * Uses PerformanceData as a Data Transfer Object (DTO) to encapsulate metrics
+ * without exposing complex logic or database dependencies during the visit
+ */
+public final class PerformanceVisitor implements UserVisitor {
+    private static final double CLOSED_TICKET_WEIGHT = 0.5;
+    private static final double MID_PRIORITY_WEIGHT = 0.7;
+    private static final double MID_RESOLUTION_WEIGHT = 0.3;
+    private static final double MID_BASE_BONUS = 15.0;
+    private static final double SENIOR_PRIORITY_WEIGHT = 1.0;
+    private static final double SENIOR_RESOLUTION_WEIGHT = 0.5;
+    private static final double SENIOR_BASE_BONUS = 30.0;
+    private static final double JUNIOR_BASE_BONUS = 5.0;
+    private static final double DIVERSITY_DIVISOR = 3.0;
+
+    private final PerformanceData performanceData;
+
+    /**
+     * Constructs a visitor with the required metrics encapsulated in a DTO
+     * DTO manages all fields whilst keeping my code clean in PerformanceVisitor
+     */
+    public PerformanceVisitor(final PerformanceData performanceData) {
+        this.performanceData = performanceData;
     }
 
     @Override
-    public double visit(Developer dev) {
+    public double visit(final Developer dev) {
         if (performanceData.getClosedTickets() == 0) {
             return 0.0;
         }
@@ -30,34 +46,63 @@ public class PerformanceVisitor implements UserVisitor {
         }
     }
 
+    /**
+     * Calculates the performance score for a Junior Developer
+     */
     private double calculateJuniorScore() {
-        double diversity = ticketDiversityFactor(performanceData.getBugTickets(), performanceData.getFeatureTickets(), performanceData.getUiTickets());
-        double base = (0.5 * performanceData.getClosedTickets()) - diversity;
-        return Math.max(0, base) + 5.0;
+        double diversity = ticketDiversityFactor(
+                performanceData.getBugTickets(),
+                performanceData.getFeatureTickets(),
+                performanceData.getUiTickets()
+        );
+        double base = (CLOSED_TICKET_WEIGHT * performanceData.getClosedTickets()) - diversity;
+        return Math.max(0, base) + JUNIOR_BASE_BONUS;
     }
 
+    /**
+     * Calculates the performance score for a Mid Developer
+     */
     private double calculateMidScore() {
-        double base = (0.5 * performanceData.getClosedTickets())
-                + (0.7 * performanceData.getHighPriorityTickets())
-                - (0.3 * performanceData.getAverageResolutionTime());
-        return Math.max(0, base) + 15.0;
+        double base = (CLOSED_TICKET_WEIGHT * performanceData.getClosedTickets())
+                + (MID_PRIORITY_WEIGHT * performanceData.getHighPriorityTickets())
+                - (MID_RESOLUTION_WEIGHT * performanceData.getAverageResolutionTime());
+        return Math.max(0, base) + MID_BASE_BONUS;
     }
 
+    /**
+     * Calculates the performance score for a Senior Developer
+     */
     private double calculateSeniorScore() {
-        double base = (0.5 * performanceData.getClosedTickets())
-                + (1.0 * performanceData.getHighPriorityTickets())
-                - (0.5 * performanceData.getAverageResolutionTime());
-        return Math.max(0, base) + 30.0;
+        double base = (CLOSED_TICKET_WEIGHT * performanceData.getClosedTickets())
+                + (SENIOR_PRIORITY_WEIGHT * performanceData.getHighPriorityTickets())
+                - (SENIOR_RESOLUTION_WEIGHT * performanceData.getAverageResolutionTime());
+        return Math.max(0, base) + SENIOR_BASE_BONUS;
     }
 
-    private double ticketDiversityFactor(int bug, int feature, int ui) {
-        double mean = (bug + feature + ui) / 3.0;
+    /**
+     * Computes a factor based on the distribution of ticket types
+     * @param bug number of bug tickets
+     * @param feature number of feature tickets
+     * @param ui number of ui tickets
+     */
+    private double ticketDiversityFactor(final int bug, final int feature, final int ui) {
+        double mean = (bug + feature + ui) / DIVERSITY_DIVISOR;
         if (mean == 0.0) {
             return 0.0;
         }
-        double variance = (Math.pow(bug - mean, 2) + Math.pow(feature - mean, 2) + Math.pow(ui - mean, 2)) / 3.0;
+        double varBug = Math.pow(bug - mean, 2);
+        double varFeat = Math.pow(feature - mean, 2);
+        double varUi = Math.pow(ui - mean, 2);
+        double variance = (varBug + varFeat + varUi) / DIVERSITY_DIVISOR;
         double std = Math.sqrt(variance);
 
         return (std / mean);
+    }
+
+    /**
+     * Returns the performance metrics DTO
+     */
+    public PerformanceData getPerformanceData() {
+        return performanceData;
     }
 }

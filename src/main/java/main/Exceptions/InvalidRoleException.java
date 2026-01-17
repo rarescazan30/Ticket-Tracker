@@ -1,7 +1,13 @@
 package main.Exceptions;
 
+/**
+ * Exception thrown when a user role is not authorized for a specific action
+ */
 public class InvalidRoleException extends RuntimeException {
-    public InvalidRoleException(String message) {
+    /**
+     * Constructs a new exception with the specified detail message
+     */
+    public InvalidRoleException(final String message) {
         super(message);
     }
 }

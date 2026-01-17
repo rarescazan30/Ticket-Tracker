@@ -5,25 +5,36 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import main.Comments.Comment;
 import main.Database.Database;
 import main.Enums.RoleType;
-import main.Enums.StatusType;
-import main.Exceptions.ClosedTickeException;
-import main.Exceptions.CommentLengthException;
-import main.Exceptions.CommentOnAnonymousTicket;
 import main.Ticket.Ticket;
-import main.Users.User;
 
 import java.util.List;
 
-public class AddCommentCommand extends BaseCommand {
+/**
+ * * Command responsible for adding a comment to a ticket
+ * Validates the user and content before appending the comment
+ * */
+public final class AddCommentCommand extends BaseCommand {
+
+    /**
+     * * Returns the roles allowed to execute this command
+     * Both Reporters and Developers can add comments
+     * */
     @Override
     protected List<RoleType> getAllowedRoles() {
         return List.of(RoleType.REPORTER, RoleType.DEVELOPER);
     }
 
-    public AddCommentCommand(List<ObjectNode> outputs, JsonNode command) {
+    /**
+     * * Constructs the command with output buffer and input data
+     * */
+    public AddCommentCommand(final List<ObjectNode> outputs, final JsonNode command) {
         super(outputs, command);
     }
 
+    /**
+     * * Executes the logic to find the ticket and add the comment
+     * Uses CommentValidator to ensure business rules are respected
+     * */
     @Override
     public void executeLogic() {
         int ticketId = command.get("ticketID").asInt();

@@ -10,14 +10,32 @@ import main.Users.User;
 
 import java.util.List;
 
-public class ViewNotificationsCommand extends BaseCommand {
+/**
+ * * Command responsible for retrieving and clearing user notifications
+ * Implements a "read-once" mechanism where notifications are removed after viewing
+ * */
+public final class ViewNotificationsCommand extends BaseCommand {
+
+    /**
+     * * Returns the roles allowed to execute this command
+     * Only Developers currently utilize the notification system
+     * */
     @Override
     protected List<RoleType> getAllowedRoles() {
         return List.of(RoleType.DEVELOPER);
     }
-    public ViewNotificationsCommand(List<ObjectNode> outputs, JsonNode command) {
+
+    /**
+     * * Constructs the command with output buffer and input data
+     * */
+    public ViewNotificationsCommand(final List<ObjectNode> outputs, final JsonNode command) {
         super(outputs, command);
     }
+
+    /**
+     * * Executes the notification retrieval logic
+     * Fetches pending notifications for the developer and clears the queue
+     * */
     @Override
     public void executeLogic() {
         User user = Database.getInstance().getUser(this.username);

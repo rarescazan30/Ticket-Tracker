@@ -10,33 +10,50 @@ import main.Ticket.Ticket;
 import main.Ticket.TicketAction;
 import main.Users.Developer;
 
-import java.time.LocalDate;
 import java.util.List;
 
-public class UndoChangeStatusCommand extends BaseCommand {
+/**
+ * * Command responsible for reverting the status change of a ticket
+ * Moves the status backwards: CLOSED -> RESOLVED -> IN_PROGRESS
+ * */
+public final class UndoChangeStatusCommand extends BaseCommand {
+
+    /**
+     * * Returns the roles allowed to execute this command
+     * Only Developers can revert status changes on their tickets
+     * */
     @Override
     protected List<RoleType> getAllowedRoles() {
         return List.of(RoleType.DEVELOPER);
     }
 
-    public UndoChangeStatusCommand(List<ObjectNode> outputs, JsonNode command) {
+    /**
+     * * Constructs the command with output buffer and input data
+     * */
+    public UndoChangeStatusCommand(final List<ObjectNode> outputs, final JsonNode command) {
         super(outputs, command);
     }
 
+    /**
+     * * Executes the logic to revert ticket status
+     * Updates the status to the previous state and logs the action
+     * */
     @Override
     public void executeLogic() {
         String username = command.get("username").asText();
         int ticketId = command.get("ticketID").asInt();
-        Developer developer = (Developer)(Database.getInstance().getUser(username));
+        Developer developer = (Developer) Database.getInstance().getUser(username);
+
         if (database.getTickets().size() > ticketId) {
             Ticket ticket = database.getTickets().get(ticketId);
             if (!username.equals(ticket.getAssignedTo())) {
-                throw new InvalidTicketAssignmentException("Ticket " + ticket.getId() + " is not assigned to developer " + username + ".");
+                throw new InvalidTicketAssignmentException("Ticket " + ticket.getId()
+                        + " is not assigned to developer " + username + ".");
             }
 
             StatusType currentStatus = ticket.getStatus();
             StatusType newStatus = null;
-            // CLOSED -> RESOLVED -> IN_PROGRESS
+            // logic now is CLOSED -> RESOLVED -> IN_PROGRESS
             if (currentStatus == StatusType.CLOSED) {
                 newStatus = StatusType.RESOLVED;
                 ticket.setSolvedAt(null);
@@ -45,7 +62,8 @@ public class UndoChangeStatusCommand extends BaseCommand {
             }
             if (newStatus != null) {
                 ticket.setStatus(newStatus);
-                ticket.addAction(new TicketAction("STATUS_CHANGED", currentStatus.toString(), newStatus.toString(), this.username, this.timestamp));
+                ticket.addAction(new TicketAction("STATUS_CHANGED", currentStatus.toString(),
+                        newStatus.toString(), this.username, this.timestamp));
             }
         }
     }

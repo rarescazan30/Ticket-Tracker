@@ -15,16 +15,35 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GenerateCustomerImpactReportCommand extends BaseCommand {
+/**
+ * * Command responsible for generating a report on customer impact
+ * Aggregates ticket statistics and calculates impact scores by ticket type
+ * */
+public final class GenerateCustomerImpactReportCommand extends BaseCommand {
+
+    private static final double ROUNDING_FACTOR = 100.0;
+
+    /**
+     * * Returns the allowed roles for this command
+     * Only Managers can generate this report
+     * */
     @Override
     protected List<RoleType> getAllowedRoles() {
         return List.of(RoleType.MANAGER);
     }
 
-    public GenerateCustomerImpactReportCommand(List<ObjectNode> outputs, JsonNode command) {
+    /**
+     * * Constructs the command with output buffer and input data
+     * */
+    public GenerateCustomerImpactReportCommand(final List<ObjectNode> outputs,
+                                               final JsonNode command) {
         super(outputs, command);
     }
 
+    /**
+     * * Executes the logic to generate the impact report
+     * Collects statistics on open tickets and calculates average impact scores
+     * */
     @Override
     public void executeLogic() {
         List<Ticket> tickets = Database.getInstance().getTickets();
@@ -83,7 +102,7 @@ public class GenerateCustomerImpactReportCommand extends BaseCommand {
                     sum += score;
                 }
                 double avg = sum / scores.size();
-                finalImpact.put(type, Math.round(avg * 100.0) / 100.0);
+                finalImpact.put(type, Math.round(avg * ROUNDING_FACTOR) / ROUNDING_FACTOR);
             }
         }
 

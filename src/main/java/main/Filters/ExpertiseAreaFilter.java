@@ -4,9 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import main.Users.Developer;
 import main.Users.User;
 
-public class ExpertiseAreaFilter implements Filter<User> {
+/**
+ * Filter that checks if a developer matches a specific expertise area
+ * This class implements the Strategy design pattern
+ */
+public final class ExpertiseAreaFilter implements Filter<User> {
+    /**
+     * Returns true if the user expertise matches the required expertise
+     */
     @Override
-    public boolean matches(User entity, JsonNode filters, User searcher) {
+    public boolean matches(final User entity, final JsonNode filters, final User searcher) {
         if (filters.has("expertiseArea")) {
             Developer devTarget = (Developer) entity;
             String requiredExpertise = filters.get("expertiseArea").asText();

@@ -15,16 +15,35 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GenerateResolutionEfficiencyReportCommand extends BaseCommand {
+/**
+ * * Command responsible for generating a resolution efficiency report
+ * Aggregates statistics on resolved and closed tickets using the EfficiencyVisitor
+ * */
+public final class GenerateResolutionEfficiencyReportCommand extends BaseCommand {
+
+    private static final double ROUNDING_FACTOR = 100.0;
+
+    /**
+     * * Returns the roles allowed to execute this command
+     * Only Managers can view the resolution efficiency report
+     * */
     @Override
     protected List<RoleType> getAllowedRoles() {
         return List.of(RoleType.MANAGER);
     }
 
-    public GenerateResolutionEfficiencyReportCommand(List<ObjectNode> outputs, JsonNode command) {
+    /**
+     * * Constructs the command with output buffer and input data
+     * */
+    public GenerateResolutionEfficiencyReportCommand(final List<ObjectNode> outputs,
+                                                     final JsonNode command) {
         super(outputs, command);
     }
 
+    /**
+     * * Executes the logic to calculate resolution efficiency
+     * Iterates through resolved/closed tickets and calculates efficiency scores
+     * */
     @Override
     public void executeLogic() {
         List<Ticket> tickets = Database.getInstance().getTickets();
@@ -55,7 +74,8 @@ public class GenerateResolutionEfficiencyReportCommand extends BaseCommand {
                 String ticketPriority = t.getBusinessPriority().toString();
                 if (ticketsByPriority.containsKey(ticketPriority)) {
                     int current = ticketsByPriority.get(ticketPriority);
-                    ticketsByPriority.put(ticketPriority, current + 1); // increment for each type/priority etc
+                    // increment for each type/priority etc
+                    ticketsByPriority.put(ticketPriority, current + 1);
                 }
 
                 String ticketType = t.getType();
@@ -84,7 +104,7 @@ public class GenerateResolutionEfficiencyReportCommand extends BaseCommand {
                     sum += score;
                 }
                 double avg = sum / scores.size();
-                finalEfficiency.put(type, Math.round(avg * 100.0) / 100.0);
+                finalEfficiency.put(type, Math.round(avg * ROUNDING_FACTOR) / ROUNDING_FACTOR);
             }
         }
 

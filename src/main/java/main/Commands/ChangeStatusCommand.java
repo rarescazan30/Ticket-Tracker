@@ -7,48 +7,67 @@ import main.Enums.RoleType;
 import main.Enums.StatusType;
 import main.Exceptions.InvalidTicketAssignmentException;
 import main.Milestone.Milestone;
-import main.Notifications.NotificationService;
 import main.Ticket.Ticket;
 import main.Ticket.TicketAction;
 import main.Users.Developer;
 
-import java.time.LocalDate;
 import java.util.List;
 
-public class ChangeStatusCommand extends BaseCommand {
+/**
+ * * Command responsible for advancing the status of a ticket
+ * Transitions from IN_PROGRESS to RESOLVED, and then to CLOSED
+ * */
+public final class ChangeStatusCommand extends BaseCommand {
+
+    /**
+     * * Returns the roles allowed to execute this command
+     * Only Developers can change the status of their assigned tickets
+     * */
     @Override
     protected List<RoleType> getAllowedRoles() {
         return List.of(RoleType.DEVELOPER);
     }
-    public ChangeStatusCommand(List<ObjectNode> outputs, JsonNode command) {
+
+    /**
+     * * Constructs the command with output buffer and input data
+     * */
+    public ChangeStatusCommand(final List<ObjectNode> outputs, final JsonNode command) {
         super(outputs, command);
     }
 
+    /**
+     * * Executes the status change logic
+     * Validates assignment, updates status, logs action, and triggers milestone completion checks
+     * */
     @Override
     public void executeLogic() {
         String username = command.get("username").asText();
         int ticketId = command.get("ticketID").asInt();
-        Developer developer = (Developer)(Database.getInstance().getUser(username));
+        Developer developer = (Developer) Database.getInstance().getUser(username);
+
         if (database.getTickets().size() > ticketId) {
             Ticket ticket = database.getTickets().get(ticketId);
             if (!username.equals(ticket.getAssignedTo())) {
-                throw new InvalidTicketAssignmentException("Ticket " + ticket.getId() + " is not assigned to developer " + username + ".");
+                throw new InvalidTicketAssignmentException("Ticket " + ticket.getId()
+                        + " is not assigned to developer " + username + ".");
             }
 
             StatusType currentStatus = ticket.getStatus();
             StatusType newStatus = null;
 
-            // IN_PROGRESS -> RESOLVED -> CLOSED
+            // logic is IN_PROGRESS -> RESOLVED -> CLOSED
             if (currentStatus == StatusType.IN_PROGRESS) {
                 newStatus = StatusType.RESOLVED;
                 ticket.setSolvedAt(this.timestamp);
             } else if (currentStatus == StatusType.RESOLVED) {
                 newStatus = StatusType.CLOSED;
-
             }
+
             if (newStatus != null) {
                 ticket.setStatus(newStatus);
-                ticket.addAction(new TicketAction("STATUS_CHANGED", currentStatus.toString(), newStatus.toString(), this.username, this.timestamp));
+                ticket.addAction(new TicketAction("STATUS_CHANGED", currentStatus.toString(),
+                        newStatus.toString(), this.username, this.timestamp));
+
                 if (newStatus == StatusType.CLOSED) {
                     for (Milestone m : Database.getInstance().getMilestones()) {
                         if (m.getTickets().contains(ticket.getId())) {

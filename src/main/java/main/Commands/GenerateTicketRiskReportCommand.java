@@ -15,16 +15,36 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GenerateTicketRiskReportCommand extends BaseCommand {
+/**
+ * * Command responsible for generating a risk report based on ticket data
+ * Aggregates risk scores and classifies them into risk levels
+ * */
+public final class GenerateTicketRiskReportCommand extends BaseCommand {
+
+    private static final double RISK_THRESHOLD_LOW = 25.0;
+    private static final double RISK_THRESHOLD_MEDIUM = 50.0;
+    private static final double RISK_THRESHOLD_HIGH = 75.0;
+
+    /**
+     * * Returns the roles allowed to execute this command
+     * Only Managers can view the risk report
+     * */
     @Override
     protected List<RoleType> getAllowedRoles() {
         return List.of(RoleType.MANAGER);
     }
 
-    public GenerateTicketRiskReportCommand(List<ObjectNode> outputs, JsonNode command) {
+    /**
+     * * Constructs the command with output buffer and input data
+     * */
+    public GenerateTicketRiskReportCommand(final List<ObjectNode> outputs, final JsonNode command) {
         super(outputs, command);
     }
 
+    /**
+     * * Executes the logic to calculate risk metrics
+     * Iterates through open tickets, calculates risk scores using Visitor, and generates stats
+     * */
     @Override
     public void executeLogic() {
         List<Ticket> tickets = Database.getInstance().getTickets();
@@ -102,10 +122,16 @@ public class GenerateTicketRiskReportCommand extends BaseCommand {
         outputs.add(finalOutput);
     }
 
-    private String getRiskLabel(double score) {
-        if (score < 25) return "NEGLIGIBLE";
-        if (score < 50) return "MODERATE";
-        if (score < 75) return "SIGNIFICANT";
-        return "MAJOR"; // 75-100
+    private String getRiskLabel(final double score) {
+        if (score < RISK_THRESHOLD_LOW) {
+            return "NEGLIGIBLE";
+        }
+        if (score < RISK_THRESHOLD_MEDIUM) {
+            return "MODERATE";
+        }
+        if (score < RISK_THRESHOLD_HIGH) {
+            return "SIGNIFICANT";
+        }
+        return "MAJOR";
     }
 }

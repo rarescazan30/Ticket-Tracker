@@ -1,8 +1,13 @@
 package main.Visitor;
 
 import main.Users.Developer;
-import main.Users.Manager;
 
+/**
+ * Interface for the Visitor pattern used to calculate metrics for different user types
+ */
 public interface UserVisitor {
+    /**
+     * Visits a developer to calculate performance or other user-specific metrics
+     */
     double visit(Developer developer);
 }

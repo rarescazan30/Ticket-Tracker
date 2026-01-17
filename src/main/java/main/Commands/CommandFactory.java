@@ -5,10 +5,27 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.List;
 
-public class CommandFactory {
-    public static Command create(List<ObjectNode> outputs, JsonNode command) {
+/**
+ * * Factory class responsible for creating command instances
+ * Implements the Factory Design Pattern to decouple object creation from logic
+ * */
+public final class CommandFactory {
+
+    /**
+     * * Private constructor to hide the implicit public one
+     * Utility classes should not be instantiated
+     * */
+    private CommandFactory() {
+        // we never call this
+    }
+
+    /**
+     * * Creates and returns the appropriate Command object based on the input JSON
+     * Maps the command string to the specific command implementation
+     * */
+    public static Command create(final List<ObjectNode> outputs, final JsonNode command) {
         String commandName = command.get("command").asText();
-        switch(commandName) {
+        switch (commandName) {
             case "reportTicket":
                 return new ReportTicketCommand(outputs, command);
             case "viewTickets":
@@ -30,7 +47,7 @@ public class CommandFactory {
             case "changeStatus":
                 return new ChangeStatusCommand(outputs, command);
             case "undoChangeStatus":
-                return new UndoChangeStatusCommand(outputs,command);
+                return new UndoChangeStatusCommand(outputs, command);
             case "viewTicketHistory":
                 return new ViewTicketHistoryCommand(outputs, command);
             case "viewNotifications":
@@ -47,7 +64,6 @@ public class CommandFactory {
                 return new GenerateCustomerImpactReportCommand(outputs, command);
             case "appStabilityReport":
                 return new AppStabilityReportCommand(outputs, command);
-
             case "lostInvestors":
                 return new LostInvestorsCommand(outputs, command);
             case "startTestingPhase":

@@ -15,7 +15,6 @@ import main.Users.User;
 import main.Visitor.PerformanceData;
 import main.Visitor.PerformanceVisitor;
 
-import java.sql.Array;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
@@ -23,119 +22,54 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class GeneratePerformanceReportCommand extends BaseCommand {
+/**
+ * * Command responsible for generating performance reports for developers
+ * Calculates statistics such as closed tickets, resolution time, and applies the Visitor pattern
+ * */
+public final class GeneratePerformanceReportCommand extends BaseCommand {
+
+    private static final double ROUNDING_FACTOR = 100.0;
+
+    /**
+     * * Returns the roles allowed to execute this command
+     * Only Managers can generate performance reports
+     * */
     @Override
     protected List<RoleType> getAllowedRoles() {
         return List.of(RoleType.MANAGER);
     }
-    public GeneratePerformanceReportCommand(List<ObjectNode> outputs, JsonNode command) {
+
+    /**
+     * * Constructs the command with output buffer and input data
+     * */
+    public GeneratePerformanceReportCommand(final List<ObjectNode> outputs,
+                                            final JsonNode command) {
         super(outputs, command);
     }
 
+    /**
+     * * Executes the logic to generate the performance report
+     * Aggregates data for the previous month and calculates scores for each subordinate developer
+     * We make use of the YearMonth class and its methods since we're already
+     * working with LocalDates
+     * */
     @Override
     public void executeLogic() {
-        // we make use of specific functions to get the month before
-        // this is useful and easier because we already store dates as LocalDate
         YearMonth targetMonth = YearMonth.from(this.timestamp).minusMonths(1);
         LocalDate startOfRange = targetMonth.atDay(1);
         LocalDate endOfRange = targetMonth.atEndOfMonth();
 
-        Manager manager = (Manager)Database.getInstance().getUser(this.username);
-        List<Developer> devs = new ArrayList<>();
-        for (User user : Database.getInstance().getUsers()) {
-            if (user.getRole() == RoleType.DEVELOPER && manager.getSubordinates().contains(user.getUsername())) {
-                devs.add((Developer)user);
-            }
-        }
+        Manager manager = (Manager) Database.getInstance().getUser(this.username);
+        List<Developer> devs = getSubordinates(manager);
         devs.sort(Comparator.comparing(User::getUsername));
+
         ArrayNode reportArray = mapper.createArrayNode();
 
         for (Developer dev : devs) {
-            int closedTicketsCount = 0;
-            int bugCount = 0;
-            int featureCount = 0;
-            int uiCount = 0;
-            int highPriorityCount = 0;
-            double totalResolutionDays = 0.0;
-
-            for (Ticket ticket : Database.getInstance().getTickets()) {
-                if (!ticket.getAssignedTo().equals(dev.getUsername())) {
-                    continue;
-                }
-                if (ticket.getStatus() != StatusType.CLOSED) {
-                    continue;
-                }
-                if (ticket.getSolvedAt() == null) {
-                    continue;
-                }
-                if (ticket.getSolvedAt().toString().isEmpty()) {
-                    continue;
-                }
-                LocalDate solvedDate = LocalDate.parse(ticket.getSolvedAt().toString());
-
-                if (!solvedDate.isBefore(startOfRange) && !solvedDate.isAfter(endOfRange)) {
-                    if (ticket.getAssignedAt() == null) {
-                        continue;
-                    }
-
-                    String type = ticket.getType();
-                    if (type.equals("BUG")) {
-                        bugCount++;
-                    }
-                    else if (type.equals("FEATURE_REQUEST")) {
-                        featureCount++;
-                    }
-                    else if (type.equals("UI_FEEDBACK")) {
-                        uiCount++;
-                    }
-                    if (ticket.getBusinessPriority() == BusinessPriorityType.HIGH ||
-                            ticket.getBusinessPriority() == BusinessPriorityType.CRITICAL) {
-                        highPriorityCount++;
-                    }
-                    if (ticket.getAssignedAt().toString().isEmpty()) {
-                        continue;
-                    }
-                    System.out.println("For the ticket with the name and id " + ticket.getId() + " i added a ticket");
-
-                    LocalDate assignedDate = LocalDate.parse(ticket.getAssignedAt().toString());
-
-                    long days = ChronoUnit.DAYS.between(assignedDate, solvedDate);
-                    double calculatedDays = (double) (days);
-
-                    totalResolutionDays += (calculatedDays);
-                    closedTicketsCount++;
-
-                }
-                System.out.println("For the ticket with the name and id " + ticket.getId() + " total tickets are " + closedTicketsCount);
-            }
-            double avgTime = (totalResolutionDays / closedTicketsCount) + 1;
-
-            PerformanceData stats = new PerformanceData(
-                    closedTicketsCount,
-                    bugCount,
-                    featureCount,
-                    uiCount,
-                    highPriorityCount,
-                    avgTime
-            );
-
-            PerformanceVisitor visitor = new PerformanceVisitor(stats);
-            double score = dev.accept(visitor);
-
-            score = Math.round(score * 100.0) / 100.0;
-            avgTime = Math.round(avgTime * 100.0) / 100.0;
-
-            dev.setPerformanceScore(score);
-
-            ObjectNode devNode = mapper.createObjectNode();
-            devNode.put("username", dev.getUsername());
-            devNode.put("closedTickets", closedTicketsCount);
-            devNode.put("averageResolutionTime", avgTime);
-            devNode.put("performanceScore", score);
-            devNode.put("seniority", dev.getSeniority().toString());
-
+            ObjectNode devNode = processDeveloperPerformance(dev, startOfRange, endOfRange);
             reportArray.add(devNode);
         }
+
         ObjectNode finalOutput = new OutputBuilder(mapper)
                 .setCommand("generatePerformanceReport")
                 .setUser(this.username)
@@ -144,5 +78,107 @@ public class GeneratePerformanceReportCommand extends BaseCommand {
                 .build();
 
         outputs.add(finalOutput);
+    }
+
+    /**
+     * * Filters the list of users to find developers subordinate to the manager
+     * */
+    private List<Developer> getSubordinates(final Manager manager) {
+        List<Developer> devs = new ArrayList<>();
+        for (User user : Database.getInstance().getUsers()) {
+            if (user.getRole() == RoleType.DEVELOPER
+                    && manager.getSubordinates().contains(user.getUsername())) {
+                devs.add((Developer) user);
+            }
+        }
+        return devs;
+    }
+
+    /**
+     * * Processes a single developer's performance for the given date range
+     * Calculates stats, applies the visitor, and builds the JSON node
+     * */
+    private ObjectNode processDeveloperPerformance(final Developer dev,
+                                                   final LocalDate start,
+                                                   final LocalDate end) {
+        int closedTicketsCount = 0;
+        int bugCount = 0;
+        int featureCount = 0;
+        int uiCount = 0;
+        int highPriorityCount = 0;
+        double totalResolutionDays = 0.0;
+
+        for (Ticket ticket : Database.getInstance().getTickets()) {
+            if (!isValidTicketForStats(ticket, dev.getUsername(), start, end)) {
+                continue;
+            }
+
+            String type = ticket.getType();
+            if ("BUG".equals(type)) {
+                bugCount++;
+            } else if ("FEATURE_REQUEST".equals(type)) {
+                featureCount++;
+            } else if ("UI_FEEDBACK".equals(type)) {
+                uiCount++;
+            }
+
+            if (ticket.getBusinessPriority() == BusinessPriorityType.HIGH
+                    || ticket.getBusinessPriority() == BusinessPriorityType.CRITICAL) {
+                highPriorityCount++;
+            }
+
+            LocalDate solvedDate = LocalDate.parse(ticket.getSolvedAt().toString());
+            LocalDate assignedDate = LocalDate.parse(ticket.getAssignedAt().toString());
+
+            long days = ChronoUnit.DAYS.between(assignedDate, solvedDate);
+            totalResolutionDays += days;
+            closedTicketsCount++;
+        }
+
+        double avgTime = (totalResolutionDays / closedTicketsCount) + 1;
+
+        PerformanceData stats = new PerformanceData(
+                closedTicketsCount, bugCount, featureCount, uiCount, highPriorityCount, avgTime
+        );
+
+        PerformanceVisitor visitor = new PerformanceVisitor(stats);
+        double score = dev.accept(visitor);
+
+        score = Math.round(score * ROUNDING_FACTOR) / ROUNDING_FACTOR;
+        avgTime = Math.round(avgTime * ROUNDING_FACTOR) / ROUNDING_FACTOR;
+
+        dev.setPerformanceScore(score);
+
+        ObjectNode devNode = mapper.createObjectNode();
+        devNode.put("username", dev.getUsername());
+        devNode.put("closedTickets", closedTicketsCount);
+        devNode.put("averageResolutionTime", avgTime);
+        devNode.put("performanceScore", score);
+        devNode.put("seniority", dev.getSeniority().toString());
+
+        return devNode;
+    }
+
+    /**
+     * * Validates if a ticket should be included in the statistics
+     * Checks assignment, status, dates, and validity of timestamps
+     * */
+    private boolean isValidTicketForStats(final Ticket ticket, final String devUsername,
+                                          final LocalDate start, final LocalDate end) {
+        if (!ticket.getAssignedTo().equals(devUsername)) {
+            return false;
+        }
+        if (ticket.getStatus() != StatusType.CLOSED) {
+            return false;
+        }
+        if (ticket.getSolvedAt() == null || ticket.getSolvedAt().toString().isEmpty()) {
+            return false;
+        }
+        if (ticket.getAssignedAt() == null || ticket.getAssignedAt().toString().isEmpty()) {
+            return false;
+        }
+
+        LocalDate solvedDate = LocalDate.parse(ticket.getSolvedAt().toString());
+        return !solvedDate.isBefore(start) && !solvedDate.isAfter(end);
     }
 }

@@ -23,7 +23,7 @@ import java.util.List;
  * main.App represents the main application logic that processes input commands,
  * generates outputs, and writes them to a file
  */
-public class App {
+public final class App {
     private App() {
     }
 
@@ -40,8 +40,6 @@ public class App {
      * @param outputPath path to the file where results should be written
      */
     public static void run(final String inputPath, final String outputPath) {
-        // feel free to change this if needed
-        // however keep 'outputs' variable name to be used for writing
         Database.reset();
         TimeManager.reset();
         InteractionManager.reset();
@@ -49,24 +47,17 @@ public class App {
         TimeManager.getInstance().addObserver(InteractionManager.getInstance());
         List<ObjectNode> outputs = new ArrayList<>();
 
-        /*
-            TODO 1 :
-            Load initial user data and commands. we strongly recommend using jackson library.
-            you can use the reading from hw1 as a reference.
-            however you can use some of the more advanced features of
-            jackson library, available here: https://www.baeldung.com/jackson-annotations
-        */
-
         ObjectMapper mapper = new ObjectMapper();
         try {
             File databaseUsers = new File(INPUT_USERS_FIELD);
             // avoid type erasure
-            List<User> users = mapper.readValue(databaseUsers, new TypeReference<List<User>>() {});
+            List<User> users = mapper.readValue(databaseUsers, new TypeReference<List<User>>() { });
             Database.getInstance().setUsers(users);
             JsonNode[] commands = mapper.readValue(new File(inputPath), JsonNode[].class);
 
             for (JsonNode command : commands) {
-                // we use the Command Design Pattern combined with a Factory Design Pattern here for code clarity
+                // we use the Command Design Pattern combined with
+                // a Factory Design Pattern here for code clarity
                 Command delegatedCommand = CommandFactory.create(outputs, command);
 
                 if (delegatedCommand != null) {
@@ -81,10 +72,6 @@ public class App {
             System.out.println("Error reading file");
         }
 
-
-        // TODO 3: create objectnodes for output, add them to outputs list.
-
-        // DO NOT CHANGE THIS SECTION IN ANY WAY
         try {
             File outputFile = new File(outputPath);
             outputFile.getParentFile().mkdirs();

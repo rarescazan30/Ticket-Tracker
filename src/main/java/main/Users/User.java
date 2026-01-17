@@ -4,8 +4,16 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import main.Enums.BusinessPriorityType;
 import main.Enums.RoleType;
+import main.Milestone.Milestone;
+import main.Ticket.Ticket;
 import main.Visitor.UserVisitor;
 
+import java.util.List;
+
+/**
+ * Base abstract class for all system users
+ * Supports polymorphic JSON deserialization through Jackson annotations
+ */
 // configuration for easier input reading with JSON
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
@@ -19,35 +27,77 @@ import main.Visitor.UserVisitor;
         @JsonSubTypes.Type(value = Developer.class, name = "DEVELOPER"),
         @JsonSubTypes.Type(value = Reporter.class, name = "REPORTER")
 })
-
 public abstract class User {
     private String username;
     private String email;
     private RoleType role;
 
-    public User(){
+    /**
+     * empty constructor for Jackson
+     */
+    public User() {
         // empty constructor for Jackson
     }
 
-    public User(String username, String email, RoleType role) {
+    /**
+     * Constructs a user with basic credentials and role
+     * @param username the unique identifier of the user
+     * @param email the contact email address
+     * @param role the user's role type
+     */
+    public User(final String username, final String email, final RoleType role) {
         this.username = username;
         this.email = email;
         this.role = role;
     }
-    public String getUsername() {
+
+    /**
+     * Returns the username of the user
+     */
+    public final String getUsername() {
         return username;
     }
-    public void setUsername(String username) {
+
+    /**
+     * Sets the username of the user
+     */
+    public final void setUsername(final String username) {
         this.username = username;
     }
-    public String getEmail() {
+
+    /**
+     * Returns the email of the user
+     */
+    public final String getEmail() {
         return email;
     }
 
-    public RoleType getRole() {
+    /**
+     * Returns the role of the user
+     */
+    public final RoleType getRole() {
         return role;
     }
+
+    /**
+     * Acceptance method for the Visitor design pattern
+     */
     public abstract double accept(UserVisitor visitor);
 
-    public abstract boolean checkIfOverwhelmed(BusinessPriorityType businessPriority); {}
+    /**
+     * Checks if the user has reached their workload capacity
+     */
+    public abstract boolean checkIfOverwhelmed(BusinessPriorityType businessPriority);
+
+    /**
+     * * Filters the list of milestones based on the user's role permissions
+     * Managers see what they created, Developers see what they are assigned to
+     * */
+    public abstract List<Milestone> filterVisibleMilestones(List<Milestone> milestones);
+
+    /**
+     * * Filters the list of visible tickets on the user's role permissions
+     * */
+    public abstract List<Ticket> filterVisibleTickets(List<Ticket> allTickets,
+                                                      List<Milestone> milestones);
 }

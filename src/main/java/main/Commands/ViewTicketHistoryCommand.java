@@ -1,7 +1,6 @@
 package main.Commands;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import main.Database.Database;
 import main.Enums.RoleType;
@@ -15,23 +14,41 @@ import main.Users.User;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class ViewTicketHistoryCommand extends BaseCommand {
+/**
+ * * Command responsible for retrieving the history of actions performed on tickets
+ * Filters visibility based on user role (Manager vs Developer)
+ * */
+public final class ViewTicketHistoryCommand extends BaseCommand {
+
+    /**
+     * * Returns the roles allowed to execute this command
+     * Both Developers and Managers can view ticket history, but with different scopes
+     * */
     @Override
     protected List<RoleType> getAllowedRoles() {
         return List.of(RoleType.DEVELOPER, RoleType.MANAGER);
     }
 
-    public ViewTicketHistoryCommand(List<ObjectNode> outputs, JsonNode command) {
+    /**
+     * * Constructs the command with output buffer and input data
+     * */
+    public ViewTicketHistoryCommand(final List<ObjectNode> outputs, final JsonNode command) {
         super(outputs, command);
     }
+
+    /**
+     * * Executes the logic to retrieve and filter ticket history
+     * Managers see history for tickets in their milestones
+     * Developers see history for tickets they were assigned to (up to de-assignment)
+     * */
     @Override
     public void executeLogic() {
         User user = Database.getInstance().getUser(this.username);
         List<Ticket> allTickets = Database.getInstance().getTickets();
-        List<TicketHistoryDetails> output =  new ArrayList<>();
+        List<TicketHistoryDetails> output = new ArrayList<>();
         List<Ticket> visibleTickets = new ArrayList<>();
+
         if (user.getRole() == RoleType.MANAGER) {
             // only tickets from his milestones
             List<Milestone> managerMilestones = new ArrayList<>();
@@ -53,12 +70,13 @@ public class ViewTicketHistoryCommand extends BaseCommand {
                 }
             }
         } else if (user.getRole() == RoleType.DEVELOPER) {
-            for  (Ticket ticket : allTickets) {
+            for (Ticket ticket : allTickets) {
                 boolean wasAssigned = false;
                 // assigned and assigned to this user
                 for (Object action : ticket.getActions()) {
                     TicketAction ticketAction = (TicketAction) action;
-                    if (ticketAction.getAction().equals("ASSIGNED") && this.username.equals(ticketAction.getBy())) {
+                    if (ticketAction.getAction().equals("ASSIGNED")
+                            && this.username.equals(ticketAction.getBy())) {
                         wasAssigned = true;
                         break;
                     }
@@ -68,9 +86,10 @@ public class ViewTicketHistoryCommand extends BaseCommand {
                 }
             }
         }
+
         visibleTickets.sort(new Comparator<Ticket>() {
             @Override
-            public int compare(Ticket t1, Ticket t2) {
+            public int compare(final Ticket t1, final Ticket t2) {
                 int dateComparison = t1.getCreatedAt().compareTo(t2.getCreatedAt());
                 if (dateComparison != 0) {
                     return dateComparison;
@@ -79,14 +98,16 @@ public class ViewTicketHistoryCommand extends BaseCommand {
                 return Integer.compare(t1.getId(), t2.getId());
             }
         });
+
         for (Ticket ticket : visibleTickets) {
-            List<Object> processed =  new ArrayList<>();
+            List<Object> processed = new ArrayList<>();
             if (user.getRole() == RoleType.DEVELOPER) {
                 for (Object action : ticket.getActions()) {
                     processed.add(action);
                     TicketAction ticketAction = (TicketAction) action;
-                    // we add until he quits (if he did)
-                    if (ticketAction.getAction().equals("DE-ASSIGNED") && this.username.equals(ticketAction.getBy())) {
+                    // we add until he quits (if he does)
+                    if (ticketAction.getAction().equals("DE-ASSIGNED")
+                            && this.username.equals(ticketAction.getBy())) {
                         break;
                     }
                 }
@@ -96,6 +117,7 @@ public class ViewTicketHistoryCommand extends BaseCommand {
             }
             output.add(new TicketHistoryDetails(ticket, processed));
         }
+
         ObjectNode finalOutput = new OutputBuilder(mapper)
                 .setCommand("viewTicketHistory")
                 .setUser(this.username)

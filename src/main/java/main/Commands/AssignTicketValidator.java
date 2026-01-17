@@ -1,8 +1,16 @@
 package main.Commands;
 
 import main.Database.Database;
-import main.Enums.*;
-import main.Exceptions.*;
+import main.Enums.BusinessPriorityType;
+import main.Enums.ExpertiseAreaType;
+import main.Enums.ExpertiseType;
+import main.Enums.SeniorityType;
+import main.Enums.StatusType;
+import main.Exceptions.BlockedMilestoneException;
+import main.Exceptions.InvalidExpertiseException;
+import main.Exceptions.InvalidMilestoneAccessException;
+import main.Exceptions.InvalidSeniorityException;
+import main.Exceptions.InvalidStatusException;
 import main.Milestone.Milestone;
 import main.Ticket.Ticket;
 import main.Users.Developer;
@@ -12,54 +20,46 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class AssignTicketValidator {
-    public void validateDeveloperExpertiseArea(int ticketId, String username) {
+/**
+ * * Validates all conditions required to assign a ticket to a developer
+ * Checks expertise, seniority, ticket status, and milestone constraints
+ * */
+public final class AssignTicketValidator {
+
+    /**
+     * * Verifies if the developer has the required expertise area for the ticket
+     * */
+    public void validateDeveloperExpertiseArea(final int ticketId, final String username) {
         Database database = Database.getInstance();
         User user = database.getUser(username);
         Developer dev = (Developer) user;
         ExpertiseAreaType devExpertise = dev.getExpertiseArea();
         ExpertiseType expertiseLevel = null;
-        for (Ticket ticket : database.getTickets() ) {
+        for (Ticket ticket : database.getTickets()) {
             if (ticketId == ticket.getId()) {
                 expertiseLevel = ticket.getExpertiseArea();
                 break;
             }
         }
         if (expertiseLevel != null) {
-            List<String> allowedAreas = new ArrayList<>();
-            allowedAreas.add(ExpertiseAreaType.FULLSTACK.name());
-
-            switch (expertiseLevel) {
-                case FRONTEND:
-                    allowedAreas.add(ExpertiseAreaType.FRONTEND.name());
-                    break;
-                case BACKEND:
-                    allowedAreas.add(ExpertiseAreaType.BACKEND.name());
-                    break;
-                case DEVOPS:
-                    allowedAreas.add(ExpertiseAreaType.DEVOPS.name());
-                    break;
-                case DESIGN:
-                    allowedAreas.add(ExpertiseAreaType.DESIGN.name());
-                    allowedAreas.add(ExpertiseAreaType.FRONTEND.name());
-                    break;
-                case DB:
-                    allowedAreas.add(ExpertiseAreaType.DB.name());
-                    allowedAreas.add(ExpertiseAreaType.BACKEND.name());
-                    break;
-            }
+            List<String> allowedAreas = expertiseLevel.getCompatibleAreas();
 
             if (!allowedAreas.contains(devExpertise.name())) {
                 Collections.sort(allowedAreas);
                 String requiredStr = String.join(", ", allowedAreas);
 
-                throw new InvalidExpertiseException("Developer " + username + " cannot assign ticket " + ticketId +
-                        " due to expertise area. Required: " + requiredStr +
-                        "; Current: " + devExpertise + ".");
+                throw new InvalidExpertiseException("Developer " + username
+                        + " cannot assign ticket " + ticketId
+                        + " due to expertise area. Required: " + requiredStr
+                        + "; Current: " + devExpertise + ".");
             }
         }
     }
-    public void ValidateDeveloperExperienceLevel(int ticketId, String username) {
+
+    /**
+     * * Verifies if the developer meets the seniority requirements based on ticket priority
+     * */
+    public void validateDeveloperExperienceLevel(final int ticketId, final String username) {
         Database database = Database.getInstance();
         User user = database.getUser(username);
         Developer dev = (Developer) user;
@@ -80,11 +80,14 @@ public class AssignTicketValidator {
             boolean isBugOrFeedback = type.equals("BUG") || type.equals("UI_FEEDBACK");
             boolean isFeature = type.equals("FEATURE_REQUEST");
 
-            if ((priority == BusinessPriorityType.LOW || priority == BusinessPriorityType.MEDIUM) && isBugOrFeedback) {
+            if ((priority == BusinessPriorityType.LOW
+                    || priority == BusinessPriorityType.MEDIUM) && isBugOrFeedback) {
                 allowedSeniorities.add(SeniorityType.JUNIOR.name());
             }
 
-            if ((priority == BusinessPriorityType.LOW || priority == BusinessPriorityType.MEDIUM || priority == BusinessPriorityType.HIGH) && (isBugOrFeedback || isFeature)) {
+            if ((priority == BusinessPriorityType.LOW || priority == BusinessPriorityType.MEDIUM
+                    || priority == BusinessPriorityType.HIGH)
+                    && (isBugOrFeedback || isFeature)) {
                 allowedSeniorities.add(SeniorityType.MID.name());
             }
 
@@ -96,13 +99,18 @@ public class AssignTicketValidator {
                 Collections.sort(allowedSeniorities);
                 String requiredStr = String.join(", ", allowedSeniorities);
 
-                throw new InvalidSeniorityException("Developer " + username + " cannot assign ticket " + ticketId +
-                        " due to seniority level. Required: " + requiredStr +
-                        "; Current: " + devSeniority + ".");
+                throw new InvalidSeniorityException("Developer " + username
+                        + " cannot assign ticket " + ticketId
+                        + " due to seniority level. Required: " + requiredStr
+                        + "; Current: " + devSeniority + ".");
             }
         }
     }
-    public void validateTicketStatus(int ticketId) {
+
+    /**
+     * * Checks if the ticket is in OPEN status
+     * */
+    public void validateTicketStatus(final int ticketId) {
         Database database = Database.getInstance();
         Ticket ticket = null;
 
@@ -119,7 +127,11 @@ public class AssignTicketValidator {
             }
         }
     }
-    public void validateDeveloperAssignedToMilestone(int ticketId, String username) {
+
+    /**
+     * * Ensures the developer is assigned to the milestone containing the ticket
+     * */
+    public void validateDeveloperAssignedToMilestone(final int ticketId, final String username) {
         Database database = Database.getInstance();
 
         Milestone milestone = null;
@@ -132,11 +144,16 @@ public class AssignTicketValidator {
 
         if (milestone != null) {
             if (!milestone.getAssignedDevs().contains(username)) {
-                throw new InvalidMilestoneAccessException("Developer " + username + " is not assigned to milestone " + milestone.getName() + ".");
+                throw new InvalidMilestoneAccessException("Developer " + username
+                        + " is not assigned to milestone " + milestone.getName() + ".");
             }
         }
     }
-    public void validateMilestoneNotBlocked(int ticketId) {
+
+    /**
+     * * Checks if the milestone associated with the ticket is not blocked
+     * */
+    public void validateMilestoneNotBlocked(final int ticketId) {
         Database database = Database.getInstance();
 
         Milestone milestone = null;
@@ -148,13 +165,17 @@ public class AssignTicketValidator {
         }
 
         if (milestone != null && milestone.getIsBlocked()) {
-            throw new BlockedMilestoneException("Cannot assign ticket " + ticketId + " from blocked milestone " + milestone.getName() + ".");
+            throw new BlockedMilestoneException("Cannot assign ticket " + ticketId
+                    + " from blocked milestone " + milestone.getName() + ".");
         }
     }
 
-    public void validate(int ticketId, String username) {
+    /**
+     * * Runs all validation checks in sequence
+     * */
+    public void validate(final int ticketId, final String username) {
         validateDeveloperExpertiseArea(ticketId, username);
-        ValidateDeveloperExperienceLevel(ticketId, username);
+        validateDeveloperExperienceLevel(ticketId, username);
         validateTicketStatus(ticketId);
         validateDeveloperAssignedToMilestone(ticketId, username);
         validateMilestoneNotBlocked(ticketId);
