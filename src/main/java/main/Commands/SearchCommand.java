@@ -99,11 +99,15 @@ public class SearchCommand extends BaseCommand {
                 tNode.put("reportedBy", t.getReportedBy());
                 List<String> foundWords = new ArrayList<>();
                 if (filters.has("keywords")) {
-                    ArrayNode matchingWords = tNode.putArray("matchingWords");
                     String content = (t.getTitle() + " " + t.getDescription()).toLowerCase();
+                    String[] words = content.split(" ");
                     for (JsonNode k : filters.get("keywords")) {
                         String key = k.asText().toLowerCase();
-                        if (content.contains(key)) foundWords.add(key);
+                        for (String word : words) {
+                            if (word.contains(key)) {
+                                foundWords.add(word);
+                            }
+                        }
                     }
                     Collections.sort(foundWords);
 

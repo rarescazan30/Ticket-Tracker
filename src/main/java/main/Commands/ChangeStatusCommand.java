@@ -44,7 +44,6 @@ public class ChangeStatusCommand extends BaseCommand {
                 ticket.setSolvedAt(this.timestamp);
             } else if (currentStatus == StatusType.RESOLVED) {
                 newStatus = StatusType.CLOSED;
-                // if i move ticket.setSolvedAt(this.timestamp); here and comment it in first if, this test passes but others fail!
 
             }
             if (newStatus != null) {

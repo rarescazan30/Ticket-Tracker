@@ -1,5 +1,6 @@
 package main.Users;
 
+import main.Enums.BusinessPriorityType;
 import main.Enums.ExpertiseAreaType;
 import main.Enums.SeniorityType;
 import main.Visitor.UserVisitor;
@@ -34,6 +35,21 @@ public class Developer  extends User {
     }
     public double accept(UserVisitor visitor) {
         return visitor.visit(this);
+    }
+
+    @Override
+    public boolean checkIfOverwhelmed(BusinessPriorityType businessPriority) {
+        boolean overwhelmed = false;
+        if (businessPriority == BusinessPriorityType.CRITICAL) {
+            if (getSeniority() != SeniorityType.SENIOR) {
+                overwhelmed = true;
+            }
+        } else if  (businessPriority == BusinessPriorityType.HIGH) {
+            if (getSeniority() != SeniorityType.SENIOR) {
+                overwhelmed = true;
+            }
+        }
+        return overwhelmed;
     }
 
     public void setPerformanceScore(double score) {

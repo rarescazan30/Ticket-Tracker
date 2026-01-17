@@ -2,6 +2,7 @@ package main.Users;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import main.Enums.BusinessPriorityType;
 import main.Enums.RoleType;
 import main.Visitor.UserVisitor;
 
@@ -47,4 +48,6 @@ public abstract class User {
         return role;
     }
     public abstract double accept(UserVisitor visitor);
+
+    public abstract boolean checkIfOverwhelmed(BusinessPriorityType businessPriority); {}
 }

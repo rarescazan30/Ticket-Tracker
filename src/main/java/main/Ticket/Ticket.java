@@ -6,16 +6,18 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JsonNode;
 import jdk.jshell.Snippet;
 import main.Comments.Comment;
-import main.Enums.BusinessPriorityType;
-import main.Enums.ExpertiseType;
-import main.Enums.SeniorityType;
-import main.Enums.StatusType;
+import main.Database.Database;
+import main.Enums.*;
 import main.Exceptions.NonBugAnonymous;
+import main.Users.User;
 import main.Visitor.TicketVisitor;
 
+import javax.management.relation.Role;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /*
 * */
@@ -123,11 +125,25 @@ public abstract class Ticket {
             default:
                 break;
         }
+        validateSeniority(this.businessPriority);
 
+    }
+
+    private void validateSeniority(BusinessPriorityType businessPriority) {
+        if (this.assignedTo == null || this.assignedTo.isEmpty()) {
+            return;
+        }
+        User user = Database.getInstance().getUser(this.assignedTo);
+        if (user.checkIfOverwhelmed(businessPriority)) {
+            this.assignedTo = "";
+            this.assignedAt = null;
+            this.status = StatusType.OPEN;
+        }
     }
 
     public void setBusinessPriority(BusinessPriorityType businessPriorityType) {
         this.businessPriority = businessPriorityType;
+        validateSeniority(this.businessPriority);
     }
     public void setAssignedTo(String assignedTo) {
         this.assignedTo = assignedTo;

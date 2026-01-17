@@ -46,8 +46,10 @@ public class CreateMilestoneCommand extends BaseCommand {
         NotificationService.notifyMilestoneCreated(newMilestone);
         String milestoneName = command.get("name").asText();
         for (int ticketId : tickets) {
-            Ticket t = Database.getInstance().getTickets().get(ticketId);
-            t.addAction(new TicketAction("ADDED_TO_MILESTONE", milestoneName, this.username, this.timestamp, true));
+            if (ticketId < Database.getInstance().getTickets().size()) {
+                Ticket t = Database.getInstance().getTickets().get(ticketId);
+                t.addAction(new TicketAction("ADDED_TO_MILESTONE", milestoneName, this.username, this.timestamp, true));
+            }
         }
     }
 }

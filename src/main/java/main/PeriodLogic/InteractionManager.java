@@ -34,18 +34,20 @@ public class InteractionManager implements TimeObserver {
     private void handleMilestoneInteractions(LocalDate currentDate) {
         Database db = Database.getInstance();
         for (Milestone milestone : db.getMilestones()) {
-            if (milestone.getStatus().equals("COMPLETED") || milestone.getIsBlocked()) {
+            if (milestone.getStatus().equals("COMPLETED")) {
                 continue;
             }
             LocalDate created = LocalDate.parse(milestone.getCreatedAt());
             LocalDate due = LocalDate.parse(milestone.getDueDate());
-            int daysSinceCreation = (int) (ChronoUnit.DAYS.between(created, currentDate) + 1);
+            int daysSinceCreation = (int) (ChronoUnit.DAYS.between(created, currentDate));
             int daysUntilDue = (int) (ChronoUnit.DAYS.between(currentDate, due) + 1);
-            if (daysSinceCreation > 0 && daysSinceCreation % 3 == 0) {
-                updateTicketPriority(milestone);
-            }
-            if (daysUntilDue == 2) {
-                setCriticalAndNotify(milestone, db);
+            if (!milestone.getIsBlocked()) {
+                if (daysSinceCreation > 0 && daysSinceCreation % 3 == 0) {
+                    updateTicketPriority(milestone);
+                }
+                if (daysUntilDue == 2) {
+                    setCriticalAndNotify(milestone, db);
+                }
             }
         }
     }
@@ -61,6 +63,7 @@ public class InteractionManager implements TimeObserver {
     }
 
     private void setCriticalAndNotify(Milestone milestone, Database db) {
+
         List<Ticket> tickets = db.getTickets();
         for (Integer id : milestone.getTickets()) {
             Ticket ticket = tickets.get(id);

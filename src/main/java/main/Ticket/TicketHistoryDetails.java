@@ -19,10 +19,10 @@ public class TicketHistoryDetails {
     private int  id;
     private String title;
     private StatusType status;
-    private List<TicketAction> actions;
+    private List<Object> actions;
     private List<Comment> comments;
 
-    public TicketHistoryDetails(Ticket ticket, List<TicketAction> actions) {
+    public TicketHistoryDetails(Ticket ticket, List<Object> actions) {
         this.id = ticket.getId();
         this.title = ticket.getTitle();
         this.status = ticket.getStatus();
@@ -32,6 +32,6 @@ public class TicketHistoryDetails {
     public int getId() { return id; }
     public String getTitle() { return title; }
     public StatusType getStatus() { return status; }
-    public List<TicketAction> getActions() { return actions; }
+    public List<Object> getActions() { return actions; }
     public List<Comment> getComments() { return comments; }
 }

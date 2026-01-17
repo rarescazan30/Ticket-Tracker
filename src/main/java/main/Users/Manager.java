@@ -1,6 +1,7 @@
 package main.Users;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import main.Enums.BusinessPriorityType;
 import main.Enums.RoleType;
 import main.Visitor.UserVisitor;
 
@@ -25,4 +26,9 @@ public class Manager extends User {
 
     public String getHireDate() { return hireDate; }
     public List<String> getSubordinates() { return subordinates; }
+
+    @Override
+    public boolean checkIfOverwhelmed(BusinessPriorityType businessPriority) {
+        return false;
+    }
 }

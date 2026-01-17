@@ -45,8 +45,11 @@ public class Milestone {
             }
         }
         if (command.has("tickets")) {
-            for (JsonNode tickets : command.get("tickets")) {
-                this.tickets.add(tickets.asInt());
+            for (JsonNode ticketNode : command.get("tickets")) {
+                int ticketId = ticketNode.asInt();
+                if (ticketId < Database.getInstance().getTickets().size()) {
+                    this.tickets.add(ticketId);
+                }
             }
         }
         if (command.has("assignedDevs")) {
@@ -65,11 +68,11 @@ public class Milestone {
     public List<Integer> getTickets() { return tickets; }
     public List<String> getAssignedDevs() { return assignedDevs; }
     public String getCreatedBy() { return createdBy; }
-    
+
     public List<Integer> getOpenTickets() {
         List<Integer> openTickets = new ArrayList<>();
         List<Ticket> allTickets = Database.getInstance().getTickets();
-        
+
         for (int number : tickets) {
             if (Database.getInstance().getTickets().size() > number) {
                 Ticket ticket = allTickets.get(number);
@@ -231,6 +234,19 @@ public class Milestone {
                 NotificationService.notifyMilestoneUnblockedLate(blockedMilestone);
             } else {
                 NotificationService.notifyMilestoneUnblocked(blockedMilestone, lastClosedTicket);
+
+                int daysUntilDue = (int) (ChronoUnit.DAYS.between(commandDate, dueDate) + 1);
+                if (daysUntilDue == 2) {
+                    for (int tId : blockedMilestone.getTickets()) {
+                        if (tId < allTickets.size()) {
+                            Ticket t = allTickets.get(tId);
+                            if (t.getStatus() != StatusType.CLOSED && t.getStatus() != StatusType.RESOLVED) {
+                                t.setBusinessPriority(BusinessPriorityType.CRITICAL);
+                            }
+                        }
+                    }
+                    NotificationService.notifyMilestoneDueTomorrow(blockedMilestone);
+                }
             }
         }
     }

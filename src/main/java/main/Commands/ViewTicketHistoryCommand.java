@@ -56,8 +56,9 @@ public class ViewTicketHistoryCommand extends BaseCommand {
             for  (Ticket ticket : allTickets) {
                 boolean wasAssigned = false;
                 // assigned and assigned to this user
-                for (TicketAction action : ticket.getActions()) {
-                    if (action.getAction().equals("ASSIGNED") && this.username.equals(action.getBy())) {
+                for (Object action : ticket.getActions()) {
+                    TicketAction ticketAction = (TicketAction) action;
+                    if (ticketAction.getAction().equals("ASSIGNED") && this.username.equals(ticketAction.getBy())) {
                         wasAssigned = true;
                         break;
                     }
@@ -79,12 +80,13 @@ public class ViewTicketHistoryCommand extends BaseCommand {
             }
         });
         for (Ticket ticket : visibleTickets) {
-            List<TicketAction> processed =  new ArrayList<>();
+            List<Object> processed =  new ArrayList<>();
             if (user.getRole() == RoleType.DEVELOPER) {
-                for (TicketAction action : ticket.getActions()) {
+                for (Object action : ticket.getActions()) {
                     processed.add(action);
+                    TicketAction ticketAction = (TicketAction) action;
                     // we add until he quits (if he did)
-                    if (action.getAction().equals("DE-ASSIGNED") && this.username.equals(action.getBy())) {
+                    if (ticketAction.getAction().equals("DE-ASSIGNED") && this.username.equals(ticketAction.getBy())) {
                         break;
                     }
                 }
